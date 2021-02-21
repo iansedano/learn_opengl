@@ -19,9 +19,10 @@ const char* vertexShaderSource = "#version 330 core\n"
 
 const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform vec4 ourColor;\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n" // orange
+"	FragColor = ourColor;\n" // color
 "}\n\0";
 
 int main()
@@ -109,20 +110,37 @@ int main()
 
 	// set up vertex data (and buffers) and config vertex attributes
 
+	//float vertices[] = {
+	//	-0.5f, -0.5f, 0.0f, // left
+	//	 0.5f, -0.5f, 0.0f, // right
+	//	 0.0f,  0.5f, 0.0f, // top
+	//};
+
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, // left
-		 0.5f, -0.5f, 0.0f, // right
-		 0.0f,  0.5f, 0.0f, // top
+		 0.5f,  0.5f, 0.0f, // top right
+		 0.5f, -0.5f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f, // top left
 	};
 
-	unsigned int VBO, VAO;
+	unsigned int indices[] = {
+		0, 1, 2, // first triangle
+		0, 2, 3  // second triangle
+	};
+
+	unsigned int VBO, VAO, EBO;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 	// bind vao first then bind and set vbo then config
 	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -132,7 +150,7 @@ int main()
 	glBindVertexArray(0);
 
 	// uncomment to draw in wireframe polygons
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 
@@ -148,9 +166,17 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
+
+		float timeValue = glfwGetTime();
+		float greenValue = sin(timeValue) / 2.0f + 0.5f;
+		float redValue = cos(timeValue) / 2.0f + 0.5f;
+		std::cout << timeValue << std::endl;
+		int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+		glUniform4f(vertexColorLocation, redValue, greenValue, 0.0f, 1.0f);
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// Check and call events and swap buffers
 		glfwSwapBuffers(window);

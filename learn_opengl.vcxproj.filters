@@ -26,20 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="4_1_texture.fs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="4_1_texture.vs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="3_3_shader.fs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="3_3_shader.vs">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>

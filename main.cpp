@@ -13,22 +13,20 @@ void processInput(GLFWwindow* window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+float mixValue = 0.2f;
+
 int main()
 {
 	glfwInit();
 
-	// Setting to version 3.3
+	// Setting to version 3.3 & use the core profile
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-	// Use the core profile
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	// Next line is necessary for Mac
-	// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
 
 	// Window Creation
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(
+		SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -45,16 +43,15 @@ int main()
 		return -1;
 	}
 
-	Shader ourShader("4_1_texture.vs", "4_1_texture.fs");
+	// Init shaders
+	Shader ourShader("shaders/4_1_texture.vs", "shaders/4_1_texture.fs");
 
 	// set up vertex data (and buffers) and config vertex attributes
-
-
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f,	  1.0f, 0.0f, 0.0f,	 1.0f, 1.0f, // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,	 1.0f, 0.0f, // bottom right
+		 0.5f,  0.5f, 0.0f,	  1.0f, 0.0f, 0.0f,	 4.0f, 4.0f, // top right
+		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,	 4.0f, 0.0f, // bottom right
 		-0.5f, -0.5f, 0.0f,	  0.0f, 0.0f, 1.0f,	 0.0f, 0.0f, // bottom left
-		-0.5f,  0.5f, 0.0f,	  1.0f, 1.0f, 0.0f,	 0.0f, 1.0f, // top left
+		-0.5f,  0.5f, 0.0f,	  1.0f, 1.0f, 0.0f,	 0.0f, 4.0f, // top left
 	};
 
 	unsigned int indices[] = {
@@ -62,13 +59,13 @@ int main()
 		0, 2, 3  // second triangle
 	};
 
+	// VBO VAO EBO
 	unsigned int VBO, VAO, EBO;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 
-	// bind vao first then bind and set vbo then config
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -97,15 +94,16 @@ int main()
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	// LOADING TEXTURES
+	unsigned int texture1;
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	int width, height, nrChannels;
 
@@ -123,7 +121,34 @@ int main()
 	
 	stbi_image_free(data);
 
+	// TEXTURE 2
+	unsigned int texture2;
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	stbi_set_flip_vertically_on_load(true);
+	data = stbi_load("textures/awesomeface.png", &width, &height, &nrChannels, 0);
+
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
 	// RENDER LOOP
+
+	ourShader.use();
+	glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+	ourShader.setInt("texture2", 1);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -134,9 +159,12 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
 
-		ourShader.use();
+		ourShader.setFloat("mixValue", mixValue);
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -155,6 +183,17 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		mixValue += 0.001f;
+		if (mixValue >= 1.0f) mixValue = 1.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		mixValue -= 0.001f;
+		if (mixValue <= 0.0f) mixValue = 0.0f;
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

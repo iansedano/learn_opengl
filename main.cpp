@@ -2,6 +2,10 @@
 #include <GLFW/glfw3.h>
 #include "stb_image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <learn_opengl/shader_s.h>
 
 #include <iostream>
@@ -44,14 +48,14 @@ int main()
 	}
 
 	// Init shaders
-	Shader ourShader("shaders/4_1_texture.vs", "shaders/4_1_texture.fs");
+	Shader ourShader("shaders/5_1_transform.vs", "shaders/5_1_transform.fs");
 
 	// set up vertex data (and buffers) and config vertex attributes
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f,	  1.0f, 0.0f, 0.0f,	 4.0f, 4.0f, // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,	 4.0f, 0.0f, // bottom right
-		-0.5f, -0.5f, 0.0f,	  0.0f, 0.0f, 1.0f,	 0.0f, 0.0f, // bottom left
-		-0.5f,  0.5f, 0.0f,	  1.0f, 1.0f, 0.0f,	 0.0f, 4.0f, // top left
+		 0.5f,  0.5f, 0.0f,	 1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f,	 1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,	 0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,  0.0f, 1.0f, // top left
 	};
 
 	unsigned int indices[] = {
@@ -75,20 +79,12 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
 	// texture
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	
-	// ?
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// uncomment to draw in wireframe polygons
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -164,7 +160,13 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		glm::mat4 transform = glm::mat4(1.0f); // identity matrix
+		transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.0f));
+		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.5f, 0.6f, 1.0f));
+
 		ourShader.setFloat("mixValue", mixValue);
+		unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -173,6 +175,10 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 
 	glfwTerminate();
 

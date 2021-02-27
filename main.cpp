@@ -48,7 +48,7 @@ int main()
 	}
 
 	// Init shaders
-	Shader ourShader("shaders/5_1_transform.vs", "shaders/5_1_transform.fs");
+	Shader ourShader("shaders/6_1_coordsys.vs", "shaders/6_1_coordsys.fs");
 
 	// set up vertex data (and buffers) and config vertex attributes
 	float vertices[] = {
@@ -170,7 +170,6 @@ int main()
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 
 		transform = glm::mat4(1.0f);
 		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(1.0f, 0.2f, 0.5f));

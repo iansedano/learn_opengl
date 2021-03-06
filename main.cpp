@@ -9,6 +9,9 @@
 #include <learn_opengl/shader_s.h>
 
 #include <iostream>
+#include <ctime>
+#include <stdlib.h>
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -19,10 +22,14 @@ const unsigned int SCR_HEIGHT = 600;
 
 float mixValue = 0.2f;
 
-int main()
+int random()
 {
-	glfwInit();
+	srand(time(0));
+	return rand();
+}
 
+GLFWwindow* createWindow()
+{
 	// Setting to version 3.3 & use the core profile
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -35,23 +42,27 @@ int main()
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
-		return -1;
 	}
+	return window;
+}
+
+int main()
+{
+	glfwInit();
+
+	GLFWwindow* window = createWindow();
+	if (window == NULL) return -1;
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	// GLAD manages function pointers, so call it before any openGL function
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-
-	glEnable(GL_DEPTH_TEST);
-
+	
 	// Init shaders
 	Shader ourShader("shaders/6_1_coordsys.vs", "shaders/6_1_coordsys.fs");
-
+	
 	// set up vertex data (and buffers) and config vertex attributes
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,	 0.0f, 0.0f,
@@ -129,7 +140,7 @@ int main()
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-	// LOADING TEXTURES
+	// TEXTURE 1
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1);
@@ -153,7 +164,6 @@ int main()
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
-	
 	stbi_image_free(data);
 
 	// TEXTURE 2
@@ -179,34 +189,35 @@ int main()
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
-	// RENDER LOOP
 
 	ourShader.use();
 	glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
 	ourShader.setInt("texture2", 1);
 	
-
 	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(1.0f, -5.0f, -7.0f),
 		glm::vec3(2.0f, 5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
 		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(2.4f, -3.4f, -3.5f),
 		glm::vec3(-1.7f, 3.0f, -7.5f),
 		glm::vec3(1.3f, -2.0f, -2.5f),
 		glm::vec3(1.5f, 2.0f, -2.5f),
-		glm::vec3(1.5f, 0.2f, -1.5f),
-		glm::vec3(-1.3f, 1.0f, -1.5f)
+		glm::vec3(1.5f, 3.2f, -1.5f),
+		glm::vec3(-1.3f, 1.5f, -1.5f)
 	};
 
-	
+	glEnable(GL_DEPTH_TEST);
+
+
+	// ============ RENDER LOOP ============ 
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 		
 
-		float pulsing = sin(glfwGetTime());
-		float pulsing2 = cos(glfwGetTime());
+		float pulsing = sin(glfwGetTime() / 10);
+		float pulsing2 = cos(glfwGetTime() / 10);
 		float rising = glfwGetTime();
 
 		// Rendering commands here
@@ -219,8 +230,6 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
-
-
 		// Init identity matrices
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = glm::mat4(1.0f);
@@ -230,14 +239,14 @@ int main()
 		model = glm::rotate(
 			model,
 			rising * glm::radians(50.0f),
-			glm::vec3(0.5f, 1.0f, 0.0f)
+			glm::vec3(0.0f, 0.0f, 0.0f)
 		);
 		view = glm::translate(
 			view,
-			glm::vec3(0.0f, 1.0f, -5.0f)
+			glm::vec3(0.0f, 0.0f, -10.0f)
 		);
 		projection = glm::perspective(
-			glm::radians(pulsing * 100.0f),
+			glm::radians(pulsing * 10.0f + 50.0f),
 			(float)SCR_WIDTH / (float)SCR_HEIGHT,
 			0.1f,
 			100.0f

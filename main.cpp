@@ -9,8 +9,9 @@
 #include <learn_opengl/shader_s.h>
 
 #include <iostream>
-#include <ctime>
 #include <stdlib.h>
+
+#include "random.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -21,11 +22,6 @@ const unsigned int SCR_HEIGHT = 600;
 
 float mixValue = 0.2f;
 
-int random()
-{
-	srand(time(0));
-	return rand();
-}
 
 GLFWwindow* createWindow()
 {
@@ -105,8 +101,8 @@ int main()
 		 0.5f,  0.5f,  0.5f,	 1.0f, 0.0f,
 		-0.5f,  0.5f,  0.5f,	 0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,	 0.0f, 1.0f
-
 	};
+
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
 		0, 2, 3  // second triangle
@@ -136,7 +132,7 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	// uncomment to draw in wireframe polygons
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	// TEXTURE 1
@@ -202,7 +198,7 @@ int main()
 		glm::vec3(1.3f, -2.0f, -2.5f),
 		glm::vec3(1.5f, 2.0f, -2.5f),
 		glm::vec3(1.5f, 3.2f, -1.5f),
-		glm::vec3(-1.3f, 1.5f, -1.5f)
+		glm::vec3(-1.3f, 1.5f, -1.5f),
 		glm::vec3(1.5f, 0.2f, -1.5f),
 		glm::vec3(-1.3f, 1.0f, -1.5f)
 	};
@@ -272,12 +268,12 @@ int main()
 
 		for (unsigned int i = 0; i < 10; ++i) {
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, (pulsing/50) * cubePositions[i]);
+			model = glm::translate(model, (pulsing/100) * cubePositions[i]);
 			float angle = 20.0f * (i + 1);
 
 			model = glm::rotate(
 				model,
-				rising * glm::radians(angle),
+				(rising / 10) * glm::radians(angle),
 				glm::vec3(1.0f, 0.5f, 0.6f)
 			);
 
